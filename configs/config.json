@@ -5,10 +5,10 @@
     "host": "127.0.0.1",
     "port": 3306,
     "username": "root",
-    "password": "123456",
+    "password": "REPLACE_WITH_DB_PASSWORD",
     "database": "cafe_portal"
   },
-  "appSecret": "1586705456887",
+  "appSecret": "REPLACE_WITH_APP_SECRET",
   "endpoints": {
     "cafeWorker": "http://154.8.148.102:8981"
   },

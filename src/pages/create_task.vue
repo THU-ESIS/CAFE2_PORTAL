@@ -180,8 +180,7 @@ export default {
   },
   beforeMount() {
     import('mapbox-gl').then(({ default: mbgl }) => {
-      mbgl.accessToken =
-        'pk.eyJ1IjoibGl0dGxldmVnZSIsImEiOiJjazk2dG9zcjMwYm9nM2Z0Y2U1N29wY21oIn0.nPWaQWMNogzmq6ENffgmwQ'
+      mbgl.accessToken = process.env.VUE_APP_MAPBOX_TOKEN || ''
       mapboxgl = mbgl
     })
   },

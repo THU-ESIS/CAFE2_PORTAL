@@ -8,11 +8,42 @@ const initApp = require('../init')
 const path = require('path')
 const debug = require('debug')('cafe-portal:server')
 const http = require('http')
-const config = require(path.join(
+const fileConfig = require(path.join(
   __dirname,
   '../../',
   process.argv[process.argv.length - 1],
 ))
+const envValue = (name, fallback) => process.env[name] || fallback
+const config = {
+  ...fileConfig,
+  port: envValue('CAFE_PORTAL_PORT', fileConfig.port),
+  logDir: envValue('CAFE_PORTAL_LOG_DIR', fileConfig.logDir),
+  appSecret: envValue('CAFE_PORTAL_APP_SECRET', fileConfig.appSecret),
+  mysql: {
+    ...fileConfig.mysql,
+    host: envValue('CAFE_PORTAL_DB_HOST', fileConfig.mysql.host),
+    port: envValue('CAFE_PORTAL_DB_PORT', fileConfig.mysql.port),
+    username: envValue('CAFE_PORTAL_DB_USERNAME', fileConfig.mysql.username),
+    password: envValue('CAFE_PORTAL_DB_PASSWORD', fileConfig.mysql.password),
+    database: envValue('CAFE_PORTAL_DB_DATABASE', fileConfig.mysql.database),
+  },
+  endpoints: {
+    ...fileConfig.endpoints,
+    cafeWorker: envValue(
+      'CAFE_PORTAL_CAFE_WORKER_URL',
+      fileConfig.endpoints.cafeWorker,
+    ),
+  },
+}
+
+if (
+  /^REPLACE_WITH_/.test(config.appSecret) ||
+  /^REPLACE_WITH_/.test(config.mysql.password)
+) {
+  throw new Error(
+    'Set CAFE_PORTAL_APP_SECRET and CAFE_PORTAL_DB_PASSWORD before starting the Portal',
+  )
+}
 const env = process.env.CAFE_PORTAL_ENV || 'dev'
 
 const app = initApp(config, env)
