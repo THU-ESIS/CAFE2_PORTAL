@@ -1,15 +1,16 @@
 {
   "port": 4000,
-  "logDir": "/Users/Shared/data/cafe-portal",
+  "logDir": "/CAFE/log/portal",
   "mysql": {
     "host": "127.0.0.1",
     "port": 3306,
-    "username": "root",
-    "password": "123456",
-    "database": "cafe_portal"
+    "username": "cafeportal",
+    "password": "REPLACE_WITH_SECRET",
+    "database": "CAFEPORTAL"
   },
-  "appSecret": "1586705456887",
+  "appSecret": "REPLACE_WITH_SECRET",
   "endpoints": {
-    "cafeWorker": "http://154.8.148.102:8981"
-  }
+    "cafeWorker": "http://localhost:8080/datamanager-worker"
+  },
+  "serveDist": true
 }

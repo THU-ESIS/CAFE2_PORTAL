@@ -6,6 +6,7 @@ const {
   userControllers,
   searchControllers,
   taskControllers,
+  remoteTaskControllers,
 } = require('./controllers')
 
 const router = express.Router()
@@ -78,4 +79,13 @@ router
     taskControllers.getTaskDetail,
   )
 
+router.post(
+    '/remote-tasks', // This path must match the frontend client
+    userControllers.checkLoginMiddleware, // Protect the route
+    remoteTaskControllers.createRemoteTask
+);
+
 module.exports = router
+
+// Alias: frontend RemoteTaskClient uses baseURL '/api', but the router is mounted at root.
+router.post("/api/remote-tasks", userControllers.checkLoginMiddleware, remoteTaskControllers.createRemoteTask);

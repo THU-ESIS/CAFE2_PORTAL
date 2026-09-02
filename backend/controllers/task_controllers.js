@@ -63,6 +63,10 @@ module.exports = {
       where: {
         userId: userId,
       },
+      order: [
+        ['createTime', 'DESC'],
+        ['id', 'DESC'],
+      ],
       limit: Number(limit),
       offset: Number(offset),
     })

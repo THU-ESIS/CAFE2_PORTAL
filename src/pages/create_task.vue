@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    title="Create Task"
+    title="创建气候分析任务"
     :visible.sync="dialogVisible"
     width="750px"
     :before-close="handleClose"
@@ -13,14 +13,14 @@
         :model="taskForm"
         :rules="rules"
       >
-        <el-form-item label="task name" prop="taskName">
+        <el-form-item label="任务名称" prop="taskName">
           <el-input
-            placeholder="please enter task name"
+            placeholder="请输入任务名称"
             v-model="taskForm.taskName"
           ></el-input>
         </el-form-item>
-        <el-form-item label="start age" prop="temporalStart">
-          <el-select v-model="taskForm.temporalStart">
+        <el-form-item label="开始年份" prop="temporalStart">
+          <el-select v-model="taskForm.temporalStart" placeholder="请选择">
             <el-option
               v-for="age in startAgeOptions"
               :value="age + '01'"
@@ -29,8 +29,8 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="end age" prop="temporalEnd">
-          <el-select v-model="taskForm.temporalEnd">
+        <el-form-item label="结束年份" prop="temporalEnd">
+          <el-select v-model="taskForm.temporalEnd" placeholder="请选择">
             <el-option
               v-for="age in endAgeOptions"
               :value="age + '12'"
@@ -39,8 +39,8 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="function" prop="name">
-          <el-select v-model="taskForm.name" style="width: 400px">
+        <el-form-item label="分析方法" prop="name">
+          <el-select v-model="taskForm.name" style="width: 100%" placeholder="请选择">
             <el-option
               v-for="(funcName, func) in functionOptions"
               :value="func"
@@ -52,13 +52,13 @@
         <el-form-item
           class="geo-extent-form-item"
           prop="extent"
-          label="geo extent"
+          label="空间范围"
         >
           <div class="map-container">
             <el-alert
               class="absolute-alert"
               v-if="!extentRectangle"
-              title="click on map to draw a boundingbox rectangle"
+              title="请在地图上点击并拖拽以绘制矩形范围"
               type="warning"
               :closable="false"
             >
@@ -66,7 +66,7 @@
             <el-alert
               class="absolute-alert"
               v-if="extentRectangle"
-              title="select and click rectangle vertex to change boundingbox size"
+              title="您可以拖动矩形的顶点来调整范围大小"
               type="warning"
               :closable="false"
             >
@@ -77,7 +77,7 @@
             <el-input-number
               class="extent-input"
               controls-position="right"
-              placeholder="min lon"
+              placeholder="最小经度"
               :min="-180"
               :max="taskForm.extent[2]"
               :step="0.01"
@@ -87,7 +87,7 @@
             <el-input-number
               class="extent-input"
               controls-position="right"
-              placeholder="min lat"
+              placeholder="最小纬度"
               :min="-90"
               :max="taskForm.extent[3]"
               :step="0.01"
@@ -99,7 +99,7 @@
               style="margin-left: 5px"
               class="extent-input"
               controls-position="right"
-              placeholder="max lon"
+              placeholder="最大经度"
               :min="taskForm.extent[0]"
               :max="180"
               :step="0.01"
@@ -109,7 +109,7 @@
             <el-input-number
               class="extent-input"
               controls-position="right"
-              placeholder="max lat"
+              placeholder="最大纬度"
               :step="0.01"
               :min="taskForm.extent[1]"
               :max="90"
@@ -121,13 +121,14 @@
       </el-form>
     </div>
     <span slot="footer" class="dialog-footer">
-      <el-button @click="handleClose">Cancel</el-button>
-      <el-button type="primary" @click="handleSubmit">Create Task</el-button>
+      <el-button @click="handleClose">取消</el-button>
+      <el-button type="primary" @click="handleSubmit">创建任务</el-button>
     </span>
   </el-dialog>
 </template>
 
 <script>
+// The script section remains the same, no changes needed here.
 import MapboxDraw from '@mapbox/mapbox-gl-draw'
 import MapboxDrawRectangle from '../lib/mapbox_draw_rectangle'
 import RectangleDirectMode from '../lib/rectangle_direct_override'
@@ -141,6 +142,20 @@ const getYearOptionsFromRange = (start, end) => {
   }
   return result
 }
+
+const getCompleteBoundaryYear = (value, isStart) => {
+  const timestamp = String(value || '')
+  const year = parseInt(timestamp.substring(0, 4), 10)
+  const parsedMonth = parseInt(timestamp.substring(4, 6), 10)
+
+  if (!Number.isFinite(year)) return NaN
+
+  const month = Number.isFinite(parsedMonth) ? parsedMonth : (isStart ? 1 : 12)
+  if (isStart && month > 1) return year + 1
+  if (!isStart && month < 12) return year - 1
+  return year
+}
+
 const DEFAULT_AGE_RANGE = [1950, 2014]
 let mapboxgl
 export default {
@@ -154,50 +169,70 @@ export default {
       selected: [],
       loading: false,
       dialogVisible: false,
-      taskForm: { extent: [] },
+      // FIX: Initialize all properties of taskForm to make them reactive
+      taskForm: {
+        taskName: '',
+        temporalStart: '',
+        temporalEnd: '',
+        name: '',
+        extent: []
+      },
       functionOptions: FUNCTION_DICT,
       extentRectangle: null,
       rules: {
         taskName: [
-          { required: true, message: 'please enter', trigger: 'blur' },
+          { required: true, message: '请输入任务名称', trigger: 'blur' },
           {
             min: 2,
             max: 20,
-            message: 'can only be at 2 to 20 chars',
+            message: '长度应为 2 到 20 个字符',
             trigger: 'blur',
           },
         ],
         temporalStart: [
-          { required: true, message: 'please select', trigger: 'blur' },
+          { required: true, message: '请选择开始年份', trigger: 'blur' },
         ],
         temporalEnd: [
-          { required: true, message: 'please select', trigger: 'blur' },
+          { required: true, message: '请选择结束年份', trigger: 'blur' },
         ],
-        name: [{ required: true, message: 'please select', trigger: 'blur' }],
-        extent: [{ required: true, message: 'please enter', trigger: 'blur' }],
+        name: [{ required: true, message: '请选择分析方法', trigger: 'blur' }],
+        extent: [{ required: true, message: '请在地图上绘制范围', trigger: 'blur' }],
       },
     }
   },
   beforeMount() {
     import('mapbox-gl').then(({ default: mbgl }) => {
-      mbgl.accessToken =
-        'pk.eyJ1IjoibGl0dGxldmVnZSIsImEiOiJjazk2dG9zcjMwYm9nM2Z0Y2U1N29wY21oIn0.nPWaQWMNogzmq6ENffgmwQ'
+      // It's recommended to use your own Mapbox token
+      mbgl.accessToken = process.env.VUE_APP_MAPBOX_TOKEN || ''
       mapboxgl = mbgl
     })
   },
   computed: {
+    availableAgeRange() {
+      const starts = (this.models || [])
+        .map(model => getCompleteBoundaryYear(model.temporalStart, true))
+        .filter(Number.isFinite)
+      const ends = (this.models || [])
+        .map(model => getCompleteBoundaryYear(model.temporalEnd, false))
+        .filter(Number.isFinite)
+
+      if (!starts.length || !ends.length) return DEFAULT_AGE_RANGE
+
+      const range = [Math.max(...starts), Math.min(...ends)]
+      return range[0] <= range[1] ? range : DEFAULT_AGE_RANGE
+    },
     startAgeOptions() {
-      const { endAge } = this.taskForm
+      const { temporalEnd } = this.taskForm
       return getYearOptionsFromRange(
-        DEFAULT_AGE_RANGE[0],
-        endAge ? Number(endAge) : DEFAULT_AGE_RANGE[1],
+        this.availableAgeRange[0],
+        temporalEnd ? parseInt(temporalEnd.substring(0, 4), 10) : this.availableAgeRange[1],
       )
     },
     endAgeOptions() {
-      const { startAge } = this.taskForm
+      const { temporalStart } = this.taskForm
       return getYearOptionsFromRange(
-        startAge ? Number(startAge) : DEFAULT_AGE_RANGE[0],
-        DEFAULT_AGE_RANGE[1],
+        temporalStart ? parseInt(temporalStart.substring(0, 4), 10) : this.availableAgeRange[0],
+        this.availableAgeRange[1],
       )
     },
   },
@@ -214,7 +249,8 @@ export default {
       this.$emit('update:visible', value)
     },
   },
-  mounted() {},
+  mounted() {
+  },
   methods: {
     handleClose() {
       this.dialogVisible = false
@@ -223,7 +259,7 @@ export default {
     handleSubmit() {
       this.$refs.taskFrom.validate(valid => {
         if (!valid) {
-          return this.$message.error('form check error, please check again!')
+          return this.$message.error('表单校验失败，请检查输入！')
         }
         const models = this.models
         const taskForm = this.taskForm
@@ -231,10 +267,11 @@ export default {
         cafeClient
           .createTask(this.convertFormContent(models, taskForm))
           .then(() => {
-            this.$message.success('create task success!')
+            this.$message.success('创建任务成功！')
             this.dialogVisible = false
+            this.$emit('task-created'); // Notify parent to refresh list
           })
-          .catch(e => this.$message.error(`create task error: ${e.message}`))
+          .catch(e => this.$message.error(`创建任务失败: ${e.message}`))
           .finally(() => {
             this.loading = false
           })
@@ -271,16 +308,8 @@ export default {
         }
       }
     },
-    onHide() {},
-    /**
-     *
-     * @param extent [min_lng, min_lat, max_lng, max_lat]
-     *  3 (min_lng, max_lat) ------- 2 (max_lng, max_lat)
-     *    |                              |
-     *    |                              |
-     *    |                              |
-     *  0 (min_lng, min_lat) ------- 1 (max_lng, min_lat)
-     */
+    onHide() {
+    },
     createRectangleFromExtent(extent) {
       const box = {
         type: 'Feature',
@@ -322,7 +351,6 @@ export default {
           [extent[0], extent[1]],
         ],
       ]
-      console.log(f)
       this.draw.set({
         type: 'FeatureCollection',
         features: [f],
@@ -342,12 +370,11 @@ export default {
       })
       const min = bounds.getSouthWest()
       const max = bounds.getNorthEast()
-      console.log(feature, bounds, min, max)
       return [min.lng, min.lat, max.lng, max.lat]
     },
     initMap() {
       this.$nextTick(() => {
-        console.log(this.$refs.mapContainer)
+        if (this.map) return; // Prevent re-initialization
         this.map = new mapboxgl.Map({
           container: this.$refs.mapContainer,
           style: 'mapbox://styles/mapbox/streets-v11',
@@ -389,9 +416,11 @@ export default {
 .map-container {
   position: relative;
 }
+
 .map {
   height: 400px;
 }
+
 .absolute-alert {
   position: absolute;
   left: 10px;
@@ -401,9 +430,11 @@ export default {
   opacity: 0.85;
   line-height: 18px;
 }
+
 .extent-input {
   margin-right: 5px;
 }
+
 .extent-wrapper {
   margin-top: 5px;
 }

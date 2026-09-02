@@ -1,8 +1,9 @@
 <template>
   <div class="list">
-    <div class="item" v-for="(label, key) in needShowKeys" :key="key">
-      <label>{{ label }}</label>
-      <p>{{ contentJson[key] }}</p>
+    <!-- IMPROVEMENT: Iteratively display all params from the content object -->
+    <div class="item" v-for="(value, key) in content" :key="key">
+      <label>{{ paramLabels[key] || key }}</label>
+      <p>{{ value }}</p>
     </div>
   </div>
 </template>
@@ -11,52 +12,42 @@
 export default {
   name: 'TaskParamVisual',
   props: {
-    content: String,
+    // Content can now be an object directly
+    content: [String, Object],
   },
   data() {
     return {
-      needShowKeys: {
-        name: 'method',
-        temporalStart: 'start',
-        temporalEnd: 'end',
-        lonMin: 'min lon',
-        latMin: 'min lat',
-        lonMax: 'max lon',
-        latMax: 'max lat',
+      // A comprehensive mapping for all possible parameter keys
+      paramLabels: {
+        // Climate Task Params
+        name: '方法',
+        temporalStart: '开始时间',
+        temporalEnd: '结束时间',
+        lonMin: '最小经度',
+        latMin: '最小纬度',
+        lonMax: '最大经度',
+        latMax: '最大纬度',
+        // Remote Sensing Task Params
+        tool: '分析工具',
+        inputFile: '输入文件',
+        si: '光谱指数',
+        method: '处理方法',
+        clusters: '聚类数量',
+        kernel_size: '核大小',
+        gamma: 'Gamma值',
+        sigma: 'Sigma值',
       },
-      contentJson: {},
     }
-  },
-  mounted() {
-    if (this.content) {
-      this.parseContent(this.content)
-    }
-  },
-  methods: {
-    parseContent(content) {
-      try {
-        this.contentJson = JSON.parse(content)
-        ;['lonMin', 'latMin', 'lonMax', 'latMax'].forEach(key => {
-          this.contentJson[key] = Number(this.contentJson[key]).toFixed(4)
-        })
-      } catch (e) {
-        console.error(`parse json error: ${e.message}`)
-        this.contentJson = {}
-      }
-    },
-  },
-  watch: {
-    content(value) {
-      this.parseContent(value)
-    },
   },
 }
 </script>
 
 <style scoped>
 .list {
-  width: 200px;
+  width: 100%;
+  max-width: 230px;
 }
+
 .item {
   display: flex;
   align-items: center;
@@ -64,13 +55,17 @@ export default {
   margin-bottom: 10px;
   line-height: 16px;
 }
+
 .item label {
   color: #ffba38;
   font-weight: bold;
   font-size: 12px;
+  margin-right: 10px;
 }
+
 .item p {
   margin: 0;
   font-size: 12px;
+  word-break: break-all;
 }
 </style>

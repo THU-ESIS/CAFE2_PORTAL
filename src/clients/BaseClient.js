@@ -181,9 +181,21 @@ class BaseClient {
   }
 
   _handleSuccess([resp, config]) {
-    const { data } = resp
+    // FIX: The 'data' from the response can sometimes be a string.
+    // We need to ensure it's a JavaScript object before proceeding.
+    let data = resp.data;
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            // If parsing fails, it might be a simple string response.
+            // In that case, we can't process it further, so we return it directly.
+            return data;
+        }
+    }
+
     const { camelizeResponseData } = this.options
-    if (camelizeResponseData) {
+    if (camelizeResponseData && data.data) {
       // 下划线转驼峰
       data.data = humps.camelizeKeys(data.data)
     }

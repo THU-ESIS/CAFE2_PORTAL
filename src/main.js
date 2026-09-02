@@ -14,6 +14,7 @@ import IndexPage from './pages/index_page'
 import Search from './pages/search'
 import CreateTask from './pages/create_task'
 import TaskDetail from './pages/task_detail'
+import RemoteAnalysisPage from './pages/remote_analysis.vue'
 import { cafeClient } from './clients'
 import { userContext } from './contexts'
 Vue.use(Sticky)
@@ -30,6 +31,7 @@ const routes = [
   { path: '/', component: IndexPage, name: 'index' },
   { path: '/search', component: Search, name: 'search' },
   { path: '/tasks/create', component: CreateTask, name: 'createTask' },
+  { path: '/remote-analysis', component: RemoteAnalysisPage, name: 'remoteAnalysis' },
 ]
 
 const router = new VueRouter({

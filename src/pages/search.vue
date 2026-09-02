@@ -1,54 +1,57 @@
 <template>
   <div class="search">
     <div class="content">
-      <SearchPanel @select="handleFilterChange"></SearchPanel>
+      <SearchPanel
+        @select="handleFilterChange"
+        @toolbox-select="handleToolboxSelect"
+      ></SearchPanel>
       <div class="table-wrapper">
         <el-table class="table" :data="data" border v-loading="loading">
           <el-table-column
             align="center"
-            label="institute"
+            label="机构"
             prop="institute"
             width="80px"
           ></el-table-column>
           <el-table-column
             align="center"
-            label="model"
+            label="模型"
             prop="model"
           ></el-table-column>
+          <el-table-column align="center" label="试验" prop="experiment">
+            <template slot-scope="{ row }">
+              {{ translateContent('experiment', row.experiment) }}
+            </template>
+          </el-table-column>
           <el-table-column
             align="center"
-            label="experiment"
-            prop="experiment"
-          ></el-table-column>
-          <el-table-column
-            align="center"
-            label="version"
+            label="版本"
             prop="versionNumber"
           ></el-table-column>
+          <el-table-column align="center" label="变量名称" prop="variableName">
+            <template slot-scope="{ row }">
+              {{ translateContent('variableName', row.variableName) }}
+            </template>
+          </el-table-column>
           <el-table-column
             align="center"
-            label="variable name"
-            prop="variableName"
-          ></el-table-column>
-          <el-table-column
-            align="center"
-            label="ensemble member"
+            label="系集成員"
             prop="ensembleMember"
           ></el-table-column>
           <el-table-column
             align="center"
-            label="temporal start"
+            label="开始时间"
             prop="temporalStart"
             width="120px"
           ></el-table-column>
           <el-table-column
             align="center"
-            label="temporal end"
+            label="结束时间"
             prop="temporalEnd"
             width="120px"
           ></el-table-column>
           <el-table-column
-            label="action"
+            label="操作"
             width="120px"
             align="center"
             fixed="right"
@@ -59,7 +62,7 @@
                 :type="row.selected ? 'danger' : 'primary'"
                 size="small"
                 @click="toggleSelect(row)"
-                >{{ row.selected ? 'unselect' : 'select' }}</el-button
+                >{{ row.selected ? '取消选择' : '选择' }}</el-button
               >
             </template>
           </el-table-column>
@@ -75,7 +78,7 @@
       <div class="float-bottom-actions" v-sticky sticky-side="bottom">
         <div class="action">
           <div class="action-left">
-            <label>selected:</label> <span>{{ selectedItems.length }}</span>
+            <label>已选择:</label> <span>{{ selectedItems.length }}</span>
           </div>
           <div class="action-right">
             <el-button
@@ -83,10 +86,10 @@
               icon="el-icon-close"
               @click="unselectAll"
               v-if="selectedItems.length > 0"
-              >unselect all</el-button
+              >全部取消</el-button
             >
             <el-button icon="el-icon-check" @click="selectAll"
-              >select all</el-button
+              >全选</el-button
             >
             <el-divider direction="vertical"></el-divider>
             <el-button
@@ -94,7 +97,7 @@
               type="primary"
               icon="el-icon-edit-outline"
               @click="createTask"
-              >Create Task</el-button
+              >创建任务</el-button
             >
           </div>
         </div>
@@ -103,14 +106,17 @@
     <CreateTaskModal
       :visible.sync="showTaskCreateModal"
       :models="selectedItems"
+      :selected-toolbox="selectedToolbox"
     ></CreateTaskModal>
   </div>
 </template>
 
 <script>
+import { translate } from '../utils/translations'
 import SearchPanel from '../components/SearchPanel'
 import { cafeClient } from '../clients'
 import CreateTaskModal from './create_task'
+
 export default {
   name: 'Search',
   components: { CreateTaskModal, SearchPanel },
@@ -124,6 +130,8 @@ export default {
       loading: false,
       showTaskCreateModal: false,
       shouldStick: true,
+      // 新增：存储从 SearchPanel 传来的工具箱名称
+      selectedToolbox: null,
     }
   },
   computed: {
@@ -133,11 +141,19 @@ export default {
   },
   mounted() {},
   methods: {
+    translateContent(field, value) {
+      return translate(field, value)
+    },
     handleFilterChange({ value }) {
       this.filter = value
       this.page = 1
       this.total = 0
       this.queryModelList()
+    },
+    // 新增：处理工具箱选择事件的方法
+    handleToolboxSelect(toolboxName) {
+      this.selectedToolbox = toolboxName
+      console.log('当前选择的工具箱是:', this.selectedToolbox) // 可以在控制台查看效果
     },
     queryModelList() {
       this.loading = true
@@ -148,13 +164,11 @@ export default {
           ...this.filter,
         })
         .then(data => {
-          console.log(data)
           const { modelList } = data
           const { list, rowCount } = modelList
-          this.data = list
+          this.data = list.map(item => ({ ...item, selected: false }))
           this.total = rowCount
 
-          // fix sticky bugs
           this.$nextTick(() => {
             window.scrollTo(window.scrollX, window.scrollY - 1)
             window.scrollTo(window.scrollX, window.scrollY + 1)
@@ -192,6 +206,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
+/* 样式部分保持不变 */
 .search {
   width: 100%;
 }
